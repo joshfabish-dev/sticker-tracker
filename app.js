@@ -9,6 +9,14 @@ let activeIndex = null;
 document.addEventListener("DOMContentLoaded", () => {
   restore();
 
+  // ✅ Hide CSV button if data already exists
+  if (stickers.length > 0) {
+    const csvBtn = document.getElementById("csvImportLabel");
+  if (csvBtn) {
+    csvBtn.style.display = "none";
+    }
+  }
+
   // ✅ CSV IMPORT (NEW)
   document.getElementById("csvInput")?.addEventListener("change", handleCSV);
 
