@@ -5,25 +5,12 @@ let searchText = "";
 let filterMode = "all";
 let activeIndex = null;
 
-// SAMPLE DATA
-const sampleData = [
-  { Code:"USA10", Name:"Weston McKennie", Organization:"USA", Have:true, DuplicatesQty:1 },
-  { Code:"USA16", Name:"Christian Pulisic", Organization:"USA", Have:false, DuplicatesQty:0 },
-  { Code:"BRA14", Name:"Vinicius Junior", Organization:"Brazil", Have:true, DuplicatesQty:0 },
-  { Code:"BRA19", Name:"Raphinha", Organization:"Brazil", Have:false, DuplicatesQty:0 },
-  { Code:"ARG17", Name:"Lionel Messi", Organization:"Argentina", Have:true, DuplicatesQty:2 }
-];
-
 // INIT
 document.addEventListener("DOMContentLoaded", () => {
   restore();
 
-  // Load sample
-  document.getElementById("loadSampleBtn").onclick = () => {
-    stickers = JSON.parse(JSON.stringify(sampleData));
-    save();
-    render();
-  };
+  // ✅ CSV IMPORT (NEW)
+  document.getElementById("csvInput")?.addEventListener("change", handleCSV);
 
   // Search
   document.getElementById("searchInput").oninput = (e) => {
@@ -31,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
     render();
   };
 
-  // ✅ Find Player button FIX
+  // ✅ Find Player
   const findBtn = document.getElementById("findPlayerBtn");
   if (findBtn) {
     findBtn.onclick = () => {
@@ -45,6 +32,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
   render();
 });
+
+// ✅ CSV PARSER
+function handleCSV(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (event) {
+    const text = event.target.result;
+    stickers = parseCSV(text);
+    save();
+    render();
+  };
+  reader.readAsText(file);
+}
+
+// ✅ Parse CSV into objects
+function parseCSV(text) {
+  const lines = text.trim().split("\n");
+  const headers = lines[0].split(",");
+
+  return lines.slice(1).map(line => {
+    const values = line.split(",");
+
+    return {
+      Code: values[0],
+      Name: values[1],
+      Organization: values[2],
+      Have: values[3].toLowerCase() === "true",
+      DuplicatesQty: parseInt(values[4]) || 0
+    };
+  });
+}
 
 // FILTER
 function setFilter(mode) {
@@ -186,12 +206,12 @@ function renderProgress() {
   bar.style.background = getProgressColor(percent);
 }
 
-// COLOR LOGIC (RESTORED)
+// COLOR LOGIC
 function getProgressColor(percent) {
-  if (percent >= 100) return "#16a34a"; // green
-  if (percent >= 75) return "#2563eb";  // blue
-  if (percent >= 50) return "#f59e0b";  // amber
-  return "#ef4444";                     // red
+  if (percent >= 100) return "#16a34a";
+  if (percent >= 75) return "#2563eb";
+  if (percent >= 50) return "#f59e0b";
+  return "#ef4444";
 }
 
 // STORAGE

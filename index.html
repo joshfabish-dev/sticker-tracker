@@ -33,7 +33,7 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     }
 
-    button {
+    button, .file-label {
       padding: 10px 14px;
       border-radius: 10px;
       border: none;
@@ -78,6 +78,11 @@
       transition: width .25s ease;
     }
 
+    .file-label {
+      background: #1f6fe5;
+      color: white;
+    }
+
     /* MODAL */
     .modal {
       display: none;
@@ -101,27 +106,9 @@
       padding: 22px;
       box-shadow: 0 20px 50px rgba(0,0,0,0.2);
     }
-
-    .badge {
-      display: inline-block;
-      padding: 6px 12px;
-      border-radius: 999px;
-      font-size: 14px;
-      font-weight: 600;
-      margin-top: 8px;
-    }
-
-    .badge-green {
-      background: #e6f4ea;
-      color: #2e7d32;
-    }
-
-    .badge-gray {
-      background: #f1f1f1;
-      color: #555;
-    }
   </style>
 </head>
+
 <body>
 
 <header>
@@ -130,13 +117,22 @@
 
 <main>
 
+  <!-- ✅ TOP CONTROLS -->
   <div class="card">
     <div class="toolbar">
-      <button id="loadSampleBtn" class="primary">Load Sample Data</button>
+
+      <!-- ✅ CSV BUTTON -->
+      <label class="file-label">
+        Import CSV
+        <input type="file" id="csvInput" accept=".csv" style="display:none;">
+      </label>
+
       <button id="findPlayerBtn" class="secondary">Find Player</button>
+
     </div>
   </div>
 
+  <!-- ✅ PROGRESS -->
   <div class="card">
     <h3>Progress</h3>
     <div id="progressText"></div>
@@ -145,6 +141,7 @@
     </div>
   </div>
 
+  <!-- ✅ STICKERS -->
   <div class="card">
     <h2>All Stickers</h2>
 
@@ -154,86 +151,38 @@
       <button onclick="setFilter('dupes')">Trades</button>
     </div>
 
-    <input id="searchInput" class="search-input" placeholder="Search by code or name" />
+    <input id="searchInput" class="search-input" placeholder="Search by code or name">
 
-    <div id="allList" style="margin-top: 14px;"></div>
+    <div id="allList" style="margin-top:14px;"></div>
   </div>
 
 </main>
 
-<!-- MODAL -->
+<!-- ✅ MODAL -->
 <div id="modal" class="modal" onclick="closeModal(event)">
   <div class="modal-card" onclick="event.stopPropagation()">
 
-  <!-- HEADER -->
-  <div style="margin-bottom:14px;">
-    <div id="modalOrg" style="color:#6b7280; font-size:14px; font-weight:500;"></div>
-
-    <div style="margin-top:4px; font-size:22px; font-weight:700;">
-      <span id="modalName"></span>
+    <div>
+      <div id="modalOrg" style="color:#666;"></div>
+      <h2 id="modalName"></h2>
+      <div id="modalCode" style="color:#999;"></div>
     </div>
 
-    <div id="modalCode" style="color:#9ca3af; margin-top:2px;"></div>
-  </div>
+    <div id="modalStatus" style="margin-top:10px;"></div>
 
-  <!-- STATUS BADGE -->
-  <div id="modalStatus"
-       style="
-         display:inline-block;
-         padding:7px 14px;
-         border-radius:999px;
-         font-size:14px;
-         font-weight:600;
-       ">
-  </div>
-
-  <!-- DUPLICATES SECTION -->
-  <div style="margin-top:22px;">
-    <div style="font-size:13px; color:#6b7280; letter-spacing:.3px;">
-      DUPLICATES
+    <div style="margin-top:16px;">
+      Dupes:
+      <button onclick="changeDupes(-1)">-</button>
+      <span id="modalDupes"></span>
+      <button onclick="changeDupes(1)">+</button>
     </div>
 
-    <div style="
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:14px;
-      margin-top:10px;
-    ">
-
-      <button onclick="changeDupes(-1)" class="secondary"
-              style="width:44px; height:44px; font-size:18px;">
-        −
-      </button>
-
-      <div id="modalDupes"
-           style="font-size:24px; font-weight:700; min-width:32px; text-align:center;">
-      </div>
-
-      <button onclick="changeDupes(1)" class="secondary"
-              style="width:44px; height:44px; font-size:18px;">
-        +
-      </button>
+    <div style="margin-top:16px;">
+      <button onclick="toggleModal()" class="primary">Toggle</button>
+      <button onclick="resetDupes()">Reset</button>
     </div>
+
   </div>
-
-  <!-- ACTIONS -->
-  <div style="margin-top:26px; display:flex; gap:10px;">
-    <button onclick="toggleModal()"
-            class="primary"
-            style="flex:1; font-weight:600;">
-      Toggle Collected
-    </button>
-
-    <button onclick="resetDupes()"
-            class="secondary"
-            style="font-weight:500;">
-      Reset
-    </button>
-  </div>
-
-</div>
-
 </div>
 
 <script src="app.js"></script>
