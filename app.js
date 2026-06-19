@@ -5,19 +5,41 @@ let searchText = "";
 let filterMode = "all";
 let activeIndex = null;
 
+// ✅ DATA FIX (SWI → SUI)
+function fixSwissCodes() {
+  let updated = false;
+
+  stickers.forEach(s => {
+    if (s.Code && s.Code.startsWith("SWI")) {
+      s.Code = s.Code.replace("SWI", "SUI");
+      updated = true;
+    }
+  });
+
+  // Only save if something actually changed
+  if (updated) {
+    save();
+  }
+}
+
 // INIT
 document.addEventListener("DOMContentLoaded", () => {
   restore();
 
+  // ✅ FIX DATA AFTER LOAD (SAFE)
+  if (stickers.length > 0) {
+    fixSwissCodes();
+  }
+
   // ✅ Hide CSV button if data already exists
   if (stickers.length > 0) {
     const csvBtn = document.getElementById("csvImportLabel");
-  if (csvBtn) {
-    csvBtn.style.display = "none";
+    if (csvBtn) {
+      csvBtn.style.display = "none";
     }
   }
 
-  // ✅ CSV IMPORT (NEW)
+  // CSV IMPORT
   document.getElementById("csvInput")?.addEventListener("change", handleCSV);
 
   // Search
@@ -26,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
     render();
   };
 
-  // ✅ Find Player
+  // Find Player
   const findBtn = document.getElementById("findPlayerBtn");
   if (findBtn) {
     findBtn.onclick = () => {
@@ -41,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
   render();
 });
 
-// ✅ CSV PARSER
+// CSV IMPORT
 function handleCSV(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -56,19 +78,18 @@ function handleCSV(e) {
   reader.readAsText(file);
 }
 
-// ✅ Parse CSV into objects
+// CSV PARSE
 function parseCSV(text) {
   const lines = text.trim().split("\n");
-  const headers = lines[0].split(",");
 
   return lines.slice(1).map(line => {
     const values = line.split(",");
 
     return {
-      Code: values[0],
-      Name: values[1],
-      Organization: values[2],
-      Have: values[3].toLowerCase() === "true",
+      Code: values[0]?.trim(),
+      Name: values[1]?.trim(),
+      Organization: values[2]?.trim(),
+      Have: values[3]?.toLowerCase() === "true",
       DuplicatesQty: parseInt(values[4]) || 0
     };
   });
@@ -110,7 +131,7 @@ function render() {
 
     const total = stickers.filter(s => s.Organization === org).length;
     const collected = stickers.filter(s => s.Organization === org && s.Have).length;
-    const percent = total ? Math.round(collected / total * 100) : 0;
+    const percent = total ? Math.round((collected / total) * 100) : 0;
 
     return `
       <div class="card">
@@ -170,11 +191,13 @@ function openModal(i) {
   document.getElementById("modal").classList.add("active");
 }
 
+// CLOSE MODAL
 function closeModal(e) {
   if (e && e.target.id !== "modal") return;
   document.getElementById("modal").classList.remove("active");
 }
 
+// ACTIONS
 function toggleModal() {
   stickers[activeIndex].Have = !stickers[activeIndex].Have;
   save();
@@ -203,7 +226,7 @@ function resetDupes() {
 function renderProgress() {
   const total = stickers.length;
   const collected = stickers.filter(s => s.Have).length;
-  const percent = total ? Math.round(collected / total * 100) : 0;
+  const percent = total ? Math.round((collected / total) * 100) : 0;
   const remaining = total - collected;
 
   document.getElementById("progressText").innerText =
