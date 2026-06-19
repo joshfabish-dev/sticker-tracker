@@ -16,9 +16,7 @@ function fixSwissCodes() {
     }
   });
 
-  if (updated) {
-    save();
-  }
+  if (updated) save();
 }
 
 // ✅ NORMALIZE EXISTING DATA (safe migration)
@@ -32,9 +30,7 @@ function normalizeStickerData() {
     }
   });
 
-  if (updated) {
-    save();
-  }
+  if (updated) save();
 }
 
 // ✅ MIGRATE EXISTING DUPLICATES TO COLOR-AWARE MODEL
@@ -56,9 +52,7 @@ function migrateDuplicateVariants() {
     }
   });
 
-  if (updated) {
-    save();
-  }
+  if (updated) save();
 }
 
 // ✅ APPLY PAGE NUMBERS (SAFE ENRICHMENT)
@@ -73,9 +67,7 @@ function applyPageNumbers(mapping) {
     }
   });
 
-  if (updated) {
-    save();
-  }
+  if (updated) save();
 }
 
 // INIT
@@ -144,7 +136,6 @@ function handleCSV(e) {
     const text = event.target.result;
     stickers = parseCSV(text);
 
-    // Run migrations immediately after import
     fixSwissCodes();
     normalizeStickerData();
     migrateDuplicateVariants();
@@ -161,7 +152,6 @@ function parseCSV(text) {
 
   return lines.slice(1).map(line => {
     const values = line.split(",");
-
     const dupes = parseInt(values[4]) || 0;
 
     return {
@@ -198,7 +188,7 @@ function handlePageCSV(e) {
   reader.readAsText(file);
 }
 
-// PAGE CSV PARSE (Code,Page)
+// PAGE CSV PARSE
 function parsePageCSV(text) {
   const lines = text.trim().split(/\r?\n/);
   const map = {};
@@ -220,6 +210,20 @@ function parsePageCSV(text) {
 function setFilter(mode) {
   filterMode = mode;
   render();
+}
+
+// ✅ TOTAL DUPLICATE COUNT FROM COLOR-AWARE MODEL
+function totalDuplicates(sticker) {
+  if (!sticker.DuplicateVariants) return sticker.DuplicatesQty || 0;
+
+  return Object.values(sticker.DuplicateVariants).reduce((sum, qty) => {
+    return sum + (parseInt(qty) || 0);
+  }, 0);
+}
+
+// ✅ SYNC LEGACY FIELD
+function syncDuplicateQty(sticker) {
+  sticker.DuplicatesQty = totalDuplicates(sticker);
 }
 
 // ✅ PROGRESS DASHBOARD
@@ -254,7 +258,6 @@ function renderProgressDashboard() {
       teams[s.Organization].collected++;
     }
 
-    // Count collected rare cards only
     if (
       s.Have &&
       s.Variant &&
@@ -446,8 +449,9 @@ function render() {
         filterMatch = !s.Have;
       }
 
+      // ✅ Trades now uses duplicate variants
       if (filterMode === "dupes") {
-        filterMatch = s.DuplicatesQty > 0;
+        filterMatch = totalDuplicates(s) > 0;
       }
 
       if (filterMode === "rare") {
@@ -488,6 +492,7 @@ function card(s) {
   const borderWidth = s.Variant === "Black" ? 6 : 4;
   const borderColor = getVariantBorderColor(s.Variant);
   const badge = getVariantBadge(s.Variant);
+  const duplicateCount = totalDuplicates(s);
 
   return `
     <div onclick="openModal(${s.i})"
@@ -520,6 +525,17 @@ function card(s) {
           ${badge.label}
         </div>
       ` : ""}
+
+      ${duplicateCount > 0 ? `
+        <div style="
+          margin-top:8px;
+          font-size:12px;
+          color:#444;
+          font-weight:600;
+        ">
+          Trades: ${duplicateCount}
+        </div>
+      ` : ""}
     </div>
   `;
 }
@@ -532,7 +548,6 @@ function openModal(i) {
   document.getElementById("modalName").innerText = s.Name || "";
   document.getElementById("modalCode").innerText = s.Code || "";
   document.getElementById("modalOrg").innerText = s.Organization || "";
-  document.getElementById("modalDupes").innerText = s.DuplicatesQty ?? 0;
 
   const variantSelect = document.getElementById("modalVariant");
   if (variantSelect) {
@@ -569,21 +584,72 @@ function openModal(i) {
     status.innerText = "✅ Collected";
     status.style.background = "#e6f4ea";
     status.style.color = "#2e7d32";
-    status.style.display = "inline-block";
-    status.style.padding = "6px 12px";
-    status.style.borderRadius = "999px";
-    status.style.fontWeight = "600";
   } else {
     status.innerText = "⬜ Missing";
     status.style.background = "#f3f4f6";
     status.style.color = "#4b5563";
-    status.style.display = "inline-block";
-    status.style.padding = "6px 12px";
-    status.style.borderRadius = "999px";
-    status.style.fontWeight = "600";
   }
 
+  status.style.display = "inline-block";
+  status.style.padding = "6px 12px";
+  status.style.borderRadius = "999px";
+  status.style.fontWeight = "600";
+
+  // ✅ Render duplicate variants inventory
+  renderDuplicateInventory(s);
+
   document.getElementById("modal").classList.add("active");
+}
+
+// ✅ TRADE INVENTORY UI
+function renderDuplicateInventory(sticker) {
+  const container = document.getElementById("tradeInventoryRows");
+  if (!container) return;
+
+  const colors = ["White", "Orange", "Blue", "Red", "Purple", "Green", "Black"];
+
+  container.innerHTML = colors.map(color => {
+    const count = sticker.DuplicateVariants?.[color] || 0;
+    const dotColor = color === "White" ? "#ddd" : getVariantBorderColor(color);
+    const textColor = color === "Black" ? "#111827" : "#333";
+
+    return `
+      <div style="
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        margin:8px 0;
+      ">
+        <div style="
+          display:flex;
+          align-items:center;
+          gap:8px;
+          min-width:100px;
+          color:${textColor};
+        ">
+          <span style="
+            width:12px;
+            height:12px;
+            border-radius:999px;
+            background:${dotColor};
+            border:${color === "White" ? "1px solid #bbb" : "none"};
+            display:inline-block;
+          "></span>
+          <span>${color}</span>
+        </div>
+
+        <div style="
+          display:flex;
+          align-items:center;
+          gap:8px;
+        ">
+          <button onclick="updateDuplicateVariant('${color}', -1)">-</button>
+          <span style="min-width:24px; text-align:center; font-weight:600;">${count}</span>
+          <button onclick="updateDuplicateVariant('${color}', 1)">+</button>
+        </div>
+      </div>
+    `;
+  }).join("");
 }
 
 // CLOSE MODAL
@@ -600,18 +666,54 @@ function toggleModal() {
   openModal(activeIndex);
 }
 
-function changeDupes(delta) {
-  stickers[activeIndex].DuplicatesQty += delta;
-  if (stickers[activeIndex].DuplicatesQty < 0) {
-    stickers[activeIndex].DuplicatesQty = 0;
+function updateDuplicateVariant(color, delta) {
+  const sticker = stickers[activeIndex];
+  if (!sticker) return;
+
+  if (!sticker.DuplicateVariants) {
+    sticker.DuplicateVariants = {
+      White: 0,
+      Orange: 0,
+      Blue: 0,
+      Red: 0,
+      Purple: 0,
+      Green: 0,
+      Black: 0
+    };
   }
+
+  sticker.DuplicateVariants[color] += delta;
+
+  if (sticker.DuplicateVariants[color] < 0) {
+    sticker.DuplicateVariants[color] = 0;
+  }
+
+  syncDuplicatesQty(sticker);
   save();
   render();
   openModal(activeIndex);
 }
 
+// Legacy buttons kept harmlessly
+function changeDupes(delta) {
+  updateDuplicateVariant("White", delta);
+}
+
 function resetDupes() {
-  stickers[activeIndex].DuplicatesQty = 0;
+  const sticker = stickers[activeIndex];
+  if (!sticker) return;
+
+  sticker.DuplicateVariants = {
+    White: 0,
+    Orange: 0,
+    Blue: 0,
+    Red: 0,
+    Purple: 0,
+    Green: 0,
+    Black: 0
+  };
+
+  syncDuplicatesQty(sticker);
   save();
   render();
   openModal(activeIndex);
