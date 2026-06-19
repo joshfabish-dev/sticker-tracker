@@ -957,6 +957,43 @@ function getVariantBadge(variant) {
   }
 }
 
+function downloadBackup() {
+
+  const data = JSON.stringify(
+    stickers,
+    null,
+    2
+  );
+
+  const blob = new Blob(
+    [data],
+    { type: "application/json" }
+  );
+
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+
+  const today = new Date();
+
+  const filename =
+    `sticker-tracker-backup-${today.getFullYear()}-${
+      String(today.getMonth() + 1).padStart(2, "0")
+    }-${
+      String(today.getDate()).padStart(2, "0")
+    }.json`;
+
+  link.href = url;
+  link.download = filename;
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(url);
+}
+
+
 // STORAGE
 function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(stickers));
