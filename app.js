@@ -161,7 +161,11 @@ function card(s) {
         cursor:pointer;
       ">
       ${s.Have ? "✅" : "⬜"} <b>${s.Name}</b>
-      <div style="color:#666;">${s.Code}</div>
+      <div style="color:#666;">
+        ${s.Code}
+        ${s.Page ? ` • Page ${s.Page}` : ""}
+      </div>
+
     </div>
   `;
 }
