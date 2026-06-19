@@ -34,7 +34,7 @@
     }
 
     button, .file-label {
-      padding: 10px 14px;
+      padding: 10px 12px;
       border-radius: 10px;
       border: none;
       cursor: pointer;
@@ -51,8 +51,11 @@
 
     .toolbar {
       display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
+      gap: 8px;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+
+      -webkit-overflow-scrolling: touch;
     }
 
     .search-input {
@@ -198,16 +201,6 @@
         <input type="file" id="pageCsvInput" accept=".csv" style="display:none;">
       </label>
 
-      <button id="findPlayerBtn" class="secondary">Find Player</button>
-
-    </div>
-  </div>
-
-  <div class="card">
-    <h3>Progress</h3>
-    <div id="progressText"></div>
-    <div class="progress-track">
-      <div id="progressBar" class="progress-fill"></div>
     </div>
   </div>
 
@@ -219,10 +212,37 @@
       <button onclick="setFilter('needed')">Needed</button>
       <button onclick="setFilter('dupes')">Trades</button>
       <button onclick="setFilter('rare')">Rares</button>
-      <button onclick="setFilter('progress')">🏆 Progress</button>
+      <button onclick="setFilter('progress')"> Stats </button>
     </div>
 
     <input id="searchInput" class="search-input" placeholder="Search by code or name">
+
+    <div id="progressSection">
+
+      <div
+        id="progressText"
+        style="
+          margin-top:12px;
+          font-weight:600;
+        ">
+      </div>
+
+      <div
+        class="progress-track"
+        style="
+          margin-top:8px;
+          margin-bottom:12px;
+        ">
+
+        <div
+          id="progressBar"
+          class="progress-fill">
+        </div>
+
+      </div>
+
+    </div>
+
 
     <div id="allList" style="margin-top:14px;"></div>
   </div>

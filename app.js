@@ -111,18 +111,6 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  // Find Player
-  const findBtn = document.getElementById("findPlayerBtn");
-  if (findBtn) {
-    findBtn.onclick = () => {
-      const input = document.getElementById("searchInput");
-      if (input) {
-        input.focus();
-        input.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-    };
-  }
-
   render();
 });
 
