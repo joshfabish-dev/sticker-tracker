@@ -47,14 +47,20 @@ document.addEventListener("DOMContentLoaded", () => {
     fixSwissCodes();
   }
 
-  // ✅ Hide import buttons if data already exists
+  // ✅ Hide import buttons after use
   if (stickers.length > 0) {
     const csvBtn = document.getElementById("csvImportLabel");
     if (csvBtn) csvBtn.style.display = "none";
-
-    // ✅ TEMP: keep page import visible
   }
 
+  // ✅ Hide page import ONLY if page data exists
+  const pageBtn = document.getElementById("pageCsvImportLabel");
+  if (pageBtn) {
+    const hasPages = stickers.some(s => s.Page);
+    if (hasPages) {
+      pageBtn.style.display = "none";
+    }
+  }
 
   // CSV IMPORT (main stickers)
   document.getElementById("csvInput")?.addEventListener("change", handleCSV);
