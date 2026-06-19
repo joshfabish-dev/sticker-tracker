@@ -221,6 +221,29 @@ function totalDuplicates(sticker) {
   }, 0);
 }
 
+function getTradeSummary(sticker) {
+
+  if (!sticker.DuplicateVariants) {
+    return "";
+  }
+
+  const colors = [
+    { key: "White", icon: "⚪" },
+    { key: "Orange", icon: "🟠" },
+    { key: "Blue", icon: "🔵" },
+    { key: "Red", icon: "🔴" },
+    { key: "Purple", icon: "🟣" },
+    { key: "Green", icon: "🟢" },
+    { key: "Black", icon: "⚫" }
+  ];
+
+  return colors
+    .filter(c => (sticker.DuplicateVariants[c.key] || 0) > 0)
+    .map(c => `${c.icon}${sticker.DuplicateVariants[c.key]}`)
+    .join(" ");
+}
+
+
 // ✅ SYNC LEGACY FIELD
 function syncDuplicateQty(sticker) {
   sticker.DuplicatesQty = totalDuplicates(sticker);
@@ -533,7 +556,14 @@ function card(s) {
           color:#444;
           font-weight:600;
         ">
-          Trades: ${duplicateCount}
+          Trades:
+        </div>
+
+        <div style="
+          margin-top:4px;
+          font-size:14px;
+        ">
+          ${getTradeSummary(s)}
         </div>
       ` : ""}
     </div>
