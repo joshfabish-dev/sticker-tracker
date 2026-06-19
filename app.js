@@ -37,6 +37,36 @@ function normalizeStickerData() {
   }
 }
 
+function migrateDuplicateVariants() {
+
+  let updated = false;
+
+  stickers.forEach(s => {
+
+    if (!s.DuplicateVariants) {
+
+      s.DuplicateVariants = {
+        White: s.DuplicatesQty || 0,
+        Orange: 0,
+        Blue: 0,
+        Red: 0,
+        Purple: 0,
+        Green: 0,
+        Black: 0
+      };
+
+      updated = true;
+    }
+
+  });
+
+  if (updated) {
+    save();
+  }
+
+}
+
+
 // ✅ APPLY PAGE NUMBERS (SAFE ENRICHMENT)
 function applyPageNumbers(mapping) {
   let updated = false;
@@ -62,6 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (stickers.length > 0) {
     fixSwissCodes();
     normalizeStickerData();
+    migrateDuplicateVariants();
   }
 
   // ✅ Hide CSV button if sticker data already exists
