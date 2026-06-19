@@ -160,21 +160,51 @@
 
 </main>
 
-<div id="modal" class="modal" onclick="closeModal(event)">
-  <div class="modal-card" onclick="event.stopPropagation()">
+  <div id="modal" class="modal" onclick="closeModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
 
-    <div>
-      <div id="modalOrg" style="color:#666;"></div>
-      <h2 id="modalName"></h2>
-      <div id="modalCode" style="color:#999;"></div>
+      <div>
+        <div id="modalOrg" style="color:#666;"></div>
+        <h2 id="modalName"></h2>
+        <div id="modalCode" style="color:#999;"></div>
 
-      <!-- PAGE DISPLAY -->
-      <div id="modalPage"
-           style="margin-top:10px; font-size:28px; font-weight:700; color:#1f6fe5;">
+        <!-- PAGE DISPLAY -->
+        <div id="modalPage"
+            style="margin-top:10px; font-size:28px; font-weight:700; color:#1f6fe5;">
+        </div>
       </div>
-    </div>
 
-    <div id="modalStatus" style="margin-top:10px;"></div>
+      <div id="modalStatus" style="margin-top:10px;"></div>
+
+      <!-- CARD TYPE -->
+      <div style="margin-top:16px;">
+        <div style="
+          font-size:13px;
+          color:#666;
+          margin-bottom:6px;
+          font-weight:600;
+        ">
+          CARD TYPE
+        </div>
+
+        <select id="modalVariant"
+                onchange="updateVariant(this.value)"
+                style="
+                  width:100%;
+                  padding:10px;
+                  border-radius:10px;
+                  border:1px solid #ccc;
+                  font-size:15px;
+                ">
+          <option value="White">White (Base)</option>
+          <option value="Orange">Orange</option>
+          <option value="Blue">Blue</option>
+          <option value="Red">Red</option>
+          <option value="Purple">Purple</option>
+          <option value="Green">Green</option>
+          <option value="Black">Black</option>
+        </select>
+      </div>
 
     <div style="margin-top:16px;">
       Dupes:

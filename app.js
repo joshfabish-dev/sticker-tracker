@@ -123,7 +123,8 @@ function parseCSV(text) {
       Name: values[1]?.trim(),
       Organization: values[2]?.trim(),
       Have: values[3]?.trim().toLowerCase() === "true",
-      DuplicatesQty: parseInt(values[4]) || 0
+      DuplicatesQty: parseInt(values[4]) || 0,
+      Variant: "White"
     };
   });
 }
@@ -244,6 +245,11 @@ function openModal(i) {
   document.getElementById("modalOrg").innerText = s.Organization;
   document.getElementById("modalDupes").innerText = s.DuplicatesQty;
 
+  const variantSelect = document.getElementById("modalVariant");
+  if (variantSelect) {
+    variantSelect.value = s.Variant || "White";
+  }
+
   // ✅ Big bold page number in detail
   const modalPageEl = document.getElementById("modalPage");
   if (modalPageEl) {
@@ -316,6 +322,12 @@ function getProgressColor(percent) {
   if (percent >= 75) return "#2563eb";
   if (percent >= 50) return "#f59e0b";
   return "#ef4444";
+}
+
+function updateVariant(value) {
+  stickers[activeIndex].Variant = value;
+  save();
+  render();
 }
 
 // STORAGE
