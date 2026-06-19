@@ -52,9 +52,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const csvBtn = document.getElementById("csvImportLabel");
     if (csvBtn) csvBtn.style.display = "none";
 
-    const pageBtn = document.getElementById("pageCsvImportLabel");
-    if (pageBtn) pageBtn.style.display = "none";
+    // ✅ TEMP: keep page import visible
   }
+
 
   // CSV IMPORT (main stickers)
   document.getElementById("csvInput")?.addEventListener("change", handleCSV);
