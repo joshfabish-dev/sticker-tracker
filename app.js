@@ -469,7 +469,10 @@ function renderProgressDashboard() {
     </div>
 
     ${sortedTeams.map(t => `
-      <div class="card">
+      <div class="card"
+           onclick="openTeamModal('${t.team.replace(/'/g, "\\'")}')"
+           style="cursor:pointer;">
+
         <div style="
           display:flex;
           justify-content:space-between;
@@ -479,8 +482,11 @@ function renderProgressDashboard() {
           <strong>${t.percent}%</strong>
         </div>
 
-        <div style="margin-bottom:8px;">
-          ${t.collected}/${t.total}
+        <div style="
+          margin-bottom:8px;
+          color:#666;
+        ">
+          ${t.collected}/${t.total} • Tap for roster
         </div>
 
         <div class="progress-track">
@@ -730,9 +736,97 @@ function renderDuplicateInventory(sticker) {
   }).join("");
 }
 
+// ✅ TEAM MODAL
+function openTeamModal(teamName) {
+  const teamPlayers = stickers
+    .map((s, i) => ({ ...s, i }))
+    .filter(s => s.Organization === teamName)
+    .sort((a, b) => a.Name.localeCompare(b.Name));
+
+  const collected = teamPlayers.filter(s => s.Have);
+  const missing = teamPlayers.filter(s => !s.Have);
+
+  const percent = teamPlayers.length
+    ? Math.round((collected.length / teamPlayers.length) * 100)
+    : 0;
+
+  const nameEl = document.getElementById("teamModalName");
+  const statsEl = document.getElementById("teamModalStats");
+  const contentEl = document.getElementById("teamModalContent");
+  const modalEl = document.getElementById("teamModal");
+
+  if (!nameEl || !statsEl || !contentEl || !modalEl) return;
+
+  nameEl.innerText = teamName;
+  statsEl.innerText = `${collected.length}/${teamPlayers.length} collected • ${percent}% complete`;
+
+  contentEl.innerHTML = `
+    <div style="margin-bottom:20px;">
+      <div style="
+        font-weight:700;
+        margin-bottom:10px;
+        color:#dc2626;
+      ">
+        Missing (${missing.length})
+      </div>
+
+      ${missing.length
+        ? missing.map(player => `
+            <div
+              onclick="openModal(${player.i}); closeTeamModal();"
+              style="
+                padding:6px 0;
+                cursor:pointer;
+              ">
+              ⬜ ${player.Name}
+            </div>
+          `).join("")
+        : `
+            <div style="color:#16a34a;">
+              Team Complete ✅
+            </div>
+          `
+      }
+    </div>
+
+    <div>
+      <div style="
+        font-weight:700;
+        margin-bottom:10px;
+        color:#16a34a;
+      ">
+        Collected (${collected.length})
+      </div>
+
+      ${collected.map(player => `
+        <div
+          onclick="openModal(${player.i}); closeTeamModal();"
+          style="
+            padding:6px 0;
+            cursor:pointer;
+          ">
+          ✅ ${player.Name}
+        </div>
+      `).join("")}
+    </div>
+  `;
+
+  modalEl.classList.add("active");
+}
+
+function closeTeamModal(e) {
+  if (e && e.target && e.target.id && e.target.id !== "teamModal") return;
+
+  const modal = document.getElementById("teamModal");
+  if (modal) {
+    modal.classList.remove("active");
+  }
+}
+
 // CLOSE MODAL
 function closeModal(e) {
   if (e && e.target && e.target.id && e.target.id !== "modal") return;
+
   const modal = document.getElementById("modal");
   if (modal) {
     modal.classList.remove("active");
