@@ -16,7 +16,23 @@ function fixSwissCodes() {
     }
   });
 
-  // Only save if something actually changed
+  if (updated) {
+    save();
+  }
+}
+
+// ✅ APPLY PAGE NUMBERS (SAFE ENRICHMENT)
+function applyPageNumbers(mapping) {
+  let updated = false;
+
+  stickers.forEach(s => {
+    const page = mapping[s.Code];
+    if (page && s.Page !== page) {
+      s.Page = page;
+      updated = true;
+    }
+  });
+
   if (updated) {
     save();
   }
@@ -26,27 +42,34 @@ function fixSwissCodes() {
 document.addEventListener("DOMContentLoaded", () => {
   restore();
 
-  // ✅ FIX DATA AFTER LOAD (SAFE)
+  // ✅ SAFELY FIX EXISTING DATA
   if (stickers.length > 0) {
     fixSwissCodes();
   }
 
-  // ✅ Hide CSV button if data already exists
+  // ✅ Hide import buttons if data already exists
   if (stickers.length > 0) {
     const csvBtn = document.getElementById("csvImportLabel");
-    if (csvBtn) {
-      csvBtn.style.display = "none";
-    }
+    if (csvBtn) csvBtn.style.display = "none";
+
+    const pageBtn = document.getElementById("pageCsvImportLabel");
+    if (pageBtn) pageBtn.style.display = "none";
   }
 
-  // CSV IMPORT
+  // CSV IMPORT (main stickers)
   document.getElementById("csvInput")?.addEventListener("change", handleCSV);
 
+  // PAGE IMPORT (Code → Page)
+  document.getElementById("pageCsvInput")?.addEventListener("change", handlePageCSV);
+
   // Search
-  document.getElementById("searchInput").oninput = (e) => {
-    searchText = e.target.value.toLowerCase();
-    render();
-  };
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) {
+    searchInput.oninput = (e) => {
+      searchText = e.target.value.toLowerCase();
+      render();
+    };
+  }
 
   // Find Player
   const findBtn = document.getElementById("findPlayerBtn");
@@ -63,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
   render();
 });
 
-// CSV IMPORT
+// MAIN CSV IMPORT
 function handleCSV(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -72,13 +95,17 @@ function handleCSV(e) {
   reader.onload = function (event) {
     const text = event.target.result;
     stickers = parseCSV(text);
+
+    // Run Swiss code fix immediately after import
+    fixSwissCodes();
+
     save();
     render();
   };
   reader.readAsText(file);
 }
 
-// CSV PARSE
+// MAIN CSV PARSE
 function parseCSV(text) {
   const lines = text.trim().split("\n");
 
@@ -89,10 +116,42 @@ function parseCSV(text) {
       Code: values[0]?.trim(),
       Name: values[1]?.trim(),
       Organization: values[2]?.trim(),
-      Have: values[3]?.toLowerCase() === "true",
+      Have: values[3]?.trim().toLowerCase() === "true",
       DuplicatesQty: parseInt(values[4]) || 0
     };
   });
+}
+
+// PAGE CSV IMPORT
+function handlePageCSV(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (event) {
+    const mapping = parsePageCSV(event.target.result);
+    applyPageNumbers(mapping);
+    render();
+  };
+  reader.readAsText(file);
+}
+
+// PAGE CSV PARSE (Code,Page)
+function parsePageCSV(text) {
+  const lines = text.trim().split("\n");
+  const map = {};
+
+  lines.slice(1).forEach(line => {
+    const values = line.split(",");
+    const code = values[0]?.trim();
+    const page = values[1]?.trim();
+
+    if (code && page) {
+      map[code] = page;
+    }
+  });
+
+  return map;
 }
 
 // FILTER
@@ -106,6 +165,7 @@ function render() {
   renderProgress();
 
   const container = document.getElementById("allList");
+  if (!container) return;
 
   const filtered = stickers
     .map((s, i) => ({ ...s, i }))
@@ -128,7 +188,6 @@ function render() {
   });
 
   container.innerHTML = Object.keys(groups).map(org => {
-
     const total = stickers.filter(s => s.Organization === org).length;
     const collected = stickers.filter(s => s.Organization === org && s.Have).length;
     const percent = total ? Math.round((collected / total) * 100) : 0;
@@ -148,7 +207,7 @@ function render() {
   }).join("");
 }
 
-// CARD
+// CARD (front)
 function card(s) {
   return `
     <div onclick="openModal(${s.i})"
@@ -165,12 +224,11 @@ function card(s) {
         ${s.Code}
         ${s.Page ? ` • Page ${s.Page}` : ""}
       </div>
-
     </div>
   `;
 }
 
-// MODAL
+// MODAL (detail)
 function openModal(i) {
   activeIndex = i;
   const s = stickers[i];
@@ -180,8 +238,13 @@ function openModal(i) {
   document.getElementById("modalOrg").innerText = s.Organization;
   document.getElementById("modalDupes").innerText = s.DuplicatesQty;
 
-  const status = document.getElementById("modalStatus");
+  // ✅ Big bold page number in detail
+  const modalPageEl = document.getElementById("modalPage");
+  if (modalPageEl) {
+    modalPageEl.innerText = s.Page ? `Page ${s.Page}` : "";
+  }
 
+  const status = document.getElementById("modalStatus");
   if (s.Have) {
     status.innerText = "✅ Collected";
     status.style.background = "#e6f4ea";

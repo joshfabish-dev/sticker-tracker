@@ -117,23 +117,28 @@
 
 <main>
 
-  <!-- ✅ TOP CONTROLS -->
+  <!-- TOP CONTROLS -->
   <div class="card">
     <div class="toolbar">
 
-      <!-- ✅ CSV BUTTON -->
+      <!-- CSV IMPORT (hidden automatically after use) -->
       <label id="csvImportLabel" class="file-label">
         Import CSV
         <input type="file" id="csvInput" accept=".csv" style="display:none;">
       </label>
 
+      <!-- NEW: PAGE IMPORT -->
+      <label id="pageCsvImportLabel" class="secondary">
+        Import Pages
+        <input type="file" id="pageCsvInput" accept=".csv" style="display:none;">
+      </label>
 
       <button id="findPlayerBtn" class="secondary">Find Player</button>
 
     </div>
   </div>
 
-  <!-- ✅ PROGRESS -->
+  <!-- PROGRESS -->
   <div class="card">
     <h3>Progress</h3>
     <div id="progressText"></div>
@@ -142,7 +147,7 @@
     </div>
   </div>
 
-  <!-- ✅ STICKERS -->
+  <!-- STICKERS -->
   <div class="card">
     <h2>All Stickers</h2>
 
@@ -159,14 +164,25 @@
 
 </main>
 
-<!-- ✅ MODAL -->
+<!-- MODAL -->
 <div id="modal" class="modal" onclick="closeModal(event)">
   <div class="modal-card" onclick="event.stopPropagation()">
 
+    <!-- HEADER -->
     <div>
       <div id="modalOrg" style="color:#666;"></div>
       <h2 id="modalName"></h2>
       <div id="modalCode" style="color:#999;"></div>
+
+      <!-- ✅ NEW: BIG PAGE NUMBER -->
+      <div id="modalPage"
+           style="
+             margin-top:10px;
+             font-size:28px;
+             font-weight:700;
+             color:#1f6fe5;
+           ">
+      </div>
     </div>
 
     <div id="modalStatus" style="margin-top:10px;"></div>
