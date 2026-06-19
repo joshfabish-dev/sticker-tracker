@@ -203,8 +203,20 @@ function render() {
         code.includes(searchText);
 
       let filterMatch = true;
-      if (filterMode === "needed") filterMatch = !s.Have;
-      if (filterMode === "dupes") filterMatch = s.DuplicatesQty > 0;
+
+      if (filterMode === "needed") {
+        filterMatch = !s.Have;
+      }
+
+      if (filterMode === "dupes") {
+        filterMatch = s.DuplicatesQty > 0;
+      }
+
+      if (filterMode === "rare") {
+        filterMatch =
+          s.Variant &&
+          s.Variant !== "White";
+      }
 
       return searchMatch && filterMatch;
     });
