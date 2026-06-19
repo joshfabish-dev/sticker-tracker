@@ -37,14 +37,12 @@ function normalizeStickerData() {
   }
 }
 
+// ✅ MIGRATE EXISTING DUPLICATES TO COLOR-AWARE MODEL
 function migrateDuplicateVariants() {
-
   let updated = false;
 
   stickers.forEach(s => {
-
     if (!s.DuplicateVariants) {
-
       s.DuplicateVariants = {
         White: s.DuplicatesQty || 0,
         Orange: 0,
@@ -54,18 +52,14 @@ function migrateDuplicateVariants() {
         Green: 0,
         Black: 0
       };
-
       updated = true;
     }
-
   });
 
   if (updated) {
     save();
   }
-
 }
-
 
 // ✅ APPLY PAGE NUMBERS (SAFE ENRICHMENT)
 function applyPageNumbers(mapping) {
@@ -150,9 +144,10 @@ function handleCSV(e) {
     const text = event.target.result;
     stickers = parseCSV(text);
 
-    // Run Swiss code fix immediately after import
+    // Run migrations immediately after import
     fixSwissCodes();
     normalizeStickerData();
+    migrateDuplicateVariants();
 
     save();
     render();
@@ -167,13 +162,24 @@ function parseCSV(text) {
   return lines.slice(1).map(line => {
     const values = line.split(",");
 
+    const dupes = parseInt(values[4]) || 0;
+
     return {
       Code: values[0]?.trim(),
       Name: values[1]?.trim(),
       Organization: values[2]?.trim(),
       Have: values[3]?.trim().toLowerCase() === "true",
-      DuplicatesQty: parseInt(values[4]) || 0,
-      Variant: "White"
+      DuplicatesQty: dupes,
+      Variant: "White",
+      DuplicateVariants: {
+        White: dupes,
+        Orange: 0,
+        Blue: 0,
+        Red: 0,
+        Purple: 0,
+        Green: 0,
+        Black: 0
+      }
     };
   });
 }
@@ -216,14 +222,13 @@ function setFilter(mode) {
   render();
 }
 
+// ✅ PROGRESS DASHBOARD
 function renderProgressDashboard() {
   const container = document.getElementById("allList");
 
   const total = stickers.length;
   const collected = stickers.filter(s => s.Have).length;
-  const percent = total
-    ? Math.round((collected / total) * 100)
-    : 0;
+  const percent = total ? Math.round((collected / total) * 100) : 0;
 
   const teams = {};
   const rareBreakdown = {
@@ -236,7 +241,6 @@ function renderProgressDashboard() {
   };
 
   stickers.forEach(s => {
-    // Team stats
     if (!teams[s.Organization]) {
       teams[s.Organization] = {
         total: 0,
@@ -250,7 +254,7 @@ function renderProgressDashboard() {
       teams[s.Organization].collected++;
     }
 
-    // Rare breakdown (count only if collected and non-white)
+    // Count collected rare cards only
     if (
       s.Have &&
       s.Variant &&
@@ -270,17 +274,19 @@ function renderProgressDashboard() {
     }))
     .sort((a, b) => b.percent - a.percent);
 
-  const completedTeams =
-    sortedTeams.filter(t => t.percent === 100).length;
-
+  const completedTeams = sortedTeams.filter(t => t.percent === 100).length;
   const topTeams = sortedTeams.slice(0, 3);
-  const bottomTeams = sortedTeams
-    .slice()
-    .reverse()
-    .slice(0, 3);
+  const bottomTeams = sortedTeams.slice().reverse().slice(0, 3);
+
+  const totalRares =
+    rareBreakdown.Orange +
+    rareBreakdown.Blue +
+    rareBreakdown.Red +
+    rareBreakdown.Purple +
+    rareBreakdown.Green +
+    rareBreakdown.Black;
 
   container.innerHTML = `
-    <!-- OVERALL -->
     <div class="card">
       <h2>🏆 Collection Progress</h2>
 
@@ -309,7 +315,6 @@ function renderProgressDashboard() {
       </div>
     </div>
 
-    <!-- ACHIEVEMENTS -->
     <div class="card">
       <h3>🏅 Achievements</h3>
 
@@ -318,18 +323,10 @@ function renderProgressDashboard() {
       </div>
 
       <div style="margin-top:8px;">
-        ⭐ Rare Cards: <strong>${
-          rareBreakdown.Orange +
-          rareBreakdown.Blue +
-          rareBreakdown.Red +
-          rareBreakdown.Purple +
-          rareBreakdown.Green +
-          rareBreakdown.Black
-        }</strong>
+        ⭐ Rare Cards: <strong>${totalRares}</strong>
       </div>
     </div>
 
-    <!-- RARE BREAKDOWN -->
     <div class="card">
       <h3>🎨 Rare Breakdown</h3>
 
@@ -361,7 +358,6 @@ function renderProgressDashboard() {
       `).join("")}
     </div>
 
-    <!-- TOP 3 -->
     <div class="card">
       <h3>🥇 Top Teams</h3>
 
@@ -377,7 +373,6 @@ function renderProgressDashboard() {
       `).join("")}
     </div>
 
-    <!-- NEEDS ATTENTION -->
     <div class="card">
       <h3>🎯 Needs Attention</h3>
 
@@ -393,7 +388,6 @@ function renderProgressDashboard() {
       `).join("")}
     </div>
 
-    <!-- ALL TEAM RANKINGS -->
     <div class="card">
       <h3>📊 Team Rankings</h3>
     </div>
@@ -425,6 +419,7 @@ function renderProgressDashboard() {
     `).join("")}
   `;
 }
+
 // MAIN RENDER
 function render() {
   renderProgress();
@@ -443,9 +438,7 @@ function render() {
       const name = (s.Name || "").toLowerCase();
       const code = (s.Code || "").toLowerCase();
 
-      const searchMatch =
-        name.includes(searchText) ||
-        code.includes(searchText);
+      const searchMatch = name.includes(searchText) || code.includes(searchText);
 
       let filterMatch = true;
 
@@ -458,9 +451,7 @@ function render() {
       }
 
       if (filterMode === "rare") {
-        filterMatch =
-          s.Variant &&
-          s.Variant !== "White";
+        filterMatch = s.Variant && s.Variant !== "White";
       }
 
       return searchMatch && filterMatch;
@@ -548,20 +539,17 @@ function openModal(i) {
     variantSelect.value = s.Variant || "White";
   }
 
-  // Big bold page number in detail
   const modalPageEl = document.getElementById("modalPage");
   if (modalPageEl) {
     modalPageEl.innerText = s.Page ? `Page ${s.Page}` : "";
   }
 
-  // ✅ Match modal border to variant
   const modalCard = document.querySelector(".modal-card");
   if (modalCard) {
     const borderWidth = s.Variant === "Black" ? "6px" : "4px";
     modalCard.style.border = `${borderWidth} solid ${getVariantBorderColor(s.Variant)}`;
   }
 
-  // ✅ Variant badge in modal
   const badge = document.getElementById("modalVariantBadge");
   if (badge) {
     const badgeData = getVariantBadge(s.Variant);
@@ -674,7 +662,7 @@ function getVariantBorderColor(variant) {
     case "Black":
       return "#000000";
     default:
-      return "#dddddd"; // White/Base
+      return "#dddddd";
   }
 }
 
