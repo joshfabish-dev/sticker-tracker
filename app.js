@@ -21,6 +21,22 @@ function fixSwissCodes() {
   }
 }
 
+// ✅ NORMALIZE EXISTING DATA (safe migration)
+function normalizeStickerData() {
+  let updated = false;
+
+  stickers.forEach(s => {
+    if (!s.Variant) {
+      s.Variant = "White";
+      updated = true;
+    }
+  });
+
+  if (updated) {
+    save();
+  }
+}
+
 // ✅ APPLY PAGE NUMBERS (SAFE ENRICHMENT)
 function applyPageNumbers(mapping) {
   let updated = false;
@@ -45,15 +61,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // ✅ SAFELY FIX EXISTING DATA
   if (stickers.length > 0) {
     fixSwissCodes();
+    normalizeStickerData();
   }
 
-  // ✅ Hide import buttons after use
+  // ✅ Hide CSV button if sticker data already exists
   if (stickers.length > 0) {
     const csvBtn = document.getElementById("csvImportLabel");
     if (csvBtn) csvBtn.style.display = "none";
   }
 
-  // ✅ Hide page import ONLY if page data exists
+  // ✅ Hide page import ONLY if page data already exists
   const pageBtn = document.getElementById("pageCsvImportLabel");
   if (pageBtn) {
     const hasPages = stickers.some(s => s.Page);
@@ -104,6 +121,7 @@ function handleCSV(e) {
 
     // Run Swiss code fix immediately after import
     fixSwissCodes();
+    normalizeStickerData();
 
     save();
     render();
@@ -113,7 +131,7 @@ function handleCSV(e) {
 
 // MAIN CSV PARSE
 function parseCSV(text) {
-  const lines = text.trim().split("\n");
+  const lines = text.trim().split(/\r?\n/);
 
   return lines.slice(1).map(line => {
     const values = line.split(",");
@@ -145,7 +163,7 @@ function handlePageCSV(e) {
 
 // PAGE CSV PARSE (Code,Page)
 function parsePageCSV(text) {
-  const lines = text.trim().split("\n");
+  const lines = text.trim().split(/\r?\n/);
   const map = {};
 
   lines.slice(1).forEach(line => {
@@ -177,9 +195,12 @@ function render() {
   const filtered = stickers
     .map((s, i) => ({ ...s, i }))
     .filter(s => {
+      const name = (s.Name || "").toLowerCase();
+      const code = (s.Code || "").toLowerCase();
+
       const searchMatch =
-        s.Name.toLowerCase().includes(searchText) ||
-        s.Code.toLowerCase().includes(searchText);
+        name.includes(searchText) ||
+        code.includes(searchText);
 
       let filterMatch = true;
       if (filterMode === "needed") filterMatch = !s.Have;
@@ -216,6 +237,10 @@ function render() {
 
 // CARD (front)
 function card(s) {
+  const borderWidth = s.Variant === "Black" ? 6 : 4;
+  const borderColor = getVariantBorderColor(s.Variant);
+  const badge = getVariantBadge(s.Variant);
+
   return `
     <div onclick="openModal(${s.i})"
       style="
@@ -223,14 +248,30 @@ function card(s) {
         border-radius:12px;
         margin-bottom:10px;
         background:${s.Have ? "#e6f4ea" : "white"};
-        border:1px solid #ddd;
+        border:${borderWidth}px solid ${borderColor};
         cursor:pointer;
       ">
       ${s.Have ? "✅" : "⬜"} <b>${s.Name}</b>
-      <div style="color:#666;">
+
+      <div style="color:#666; margin-top:4px;">
         ${s.Code}
         ${s.Page ? ` • Page ${s.Page}` : ""}
       </div>
+
+      ${badge ? `
+        <div style="
+          margin-top:8px;
+          display:inline-block;
+          padding:4px 10px;
+          border-radius:999px;
+          font-size:12px;
+          font-weight:600;
+          background:${badge.bg};
+          color:${badge.text};
+        ">
+          ${badge.label}
+        </div>
+      ` : ""}
     </div>
   `;
 }
@@ -240,20 +281,42 @@ function openModal(i) {
   activeIndex = i;
   const s = stickers[i];
 
-  document.getElementById("modalName").innerText = s.Name;
-  document.getElementById("modalCode").innerText = s.Code;
-  document.getElementById("modalOrg").innerText = s.Organization;
-  document.getElementById("modalDupes").innerText = s.DuplicatesQty;
+  document.getElementById("modalName").innerText = s.Name || "";
+  document.getElementById("modalCode").innerText = s.Code || "";
+  document.getElementById("modalOrg").innerText = s.Organization || "";
+  document.getElementById("modalDupes").innerText = s.DuplicatesQty ?? 0;
 
   const variantSelect = document.getElementById("modalVariant");
   if (variantSelect) {
     variantSelect.value = s.Variant || "White";
   }
 
-  // ✅ Big bold page number in detail
+  // Big bold page number in detail
   const modalPageEl = document.getElementById("modalPage");
   if (modalPageEl) {
     modalPageEl.innerText = s.Page ? `Page ${s.Page}` : "";
+  }
+
+  // ✅ Match modal border to variant
+  const modalCard = document.querySelector(".modal-card");
+  if (modalCard) {
+    const borderWidth = s.Variant === "Black" ? "6px" : "4px";
+    modalCard.style.border = `${borderWidth} solid ${getVariantBorderColor(s.Variant)}`;
+  }
+
+  // ✅ Variant badge in modal
+  const badge = document.getElementById("modalVariantBadge");
+  if (badge) {
+    const badgeData = getVariantBadge(s.Variant);
+
+    if (badgeData) {
+      badge.innerText = badgeData.label;
+      badge.style.background = badgeData.bg;
+      badge.style.color = badgeData.text;
+      badge.style.display = "inline-block";
+    } else {
+      badge.style.display = "none";
+    }
   }
 
   const status = document.getElementById("modalStatus");
@@ -261,10 +324,18 @@ function openModal(i) {
     status.innerText = "✅ Collected";
     status.style.background = "#e6f4ea";
     status.style.color = "#2e7d32";
+    status.style.display = "inline-block";
+    status.style.padding = "6px 12px";
+    status.style.borderRadius = "999px";
+    status.style.fontWeight = "600";
   } else {
     status.innerText = "⬜ Missing";
     status.style.background = "#f3f4f6";
     status.style.color = "#4b5563";
+    status.style.display = "inline-block";
+    status.style.padding = "6px 12px";
+    status.style.borderRadius = "999px";
+    status.style.fontWeight = "600";
   }
 
   document.getElementById("modal").classList.add("active");
@@ -301,6 +372,13 @@ function resetDupes() {
   openModal(activeIndex);
 }
 
+function updateVariant(value) {
+  stickers[activeIndex].Variant = value;
+  save();
+  render();
+  openModal(activeIndex);
+}
+
 // PROGRESS
 function renderProgress() {
   const total = stickers.length;
@@ -324,10 +402,42 @@ function getProgressColor(percent) {
   return "#ef4444";
 }
 
-function updateVariant(value) {
-  stickers[activeIndex].Variant = value;
-  save();
-  render();
+function getVariantBorderColor(variant) {
+  switch (variant) {
+    case "Orange":
+      return "#f97316";
+    case "Blue":
+      return "#2563eb";
+    case "Red":
+      return "#dc2626";
+    case "Purple":
+      return "#9333ea";
+    case "Green":
+      return "#16a34a";
+    case "Black":
+      return "#000000";
+    default:
+      return "#dddddd"; // White/Base
+  }
+}
+
+function getVariantBadge(variant) {
+  switch (variant) {
+    case "Orange":
+      return { label: "Orange", bg: "#ffedd5", text: "#c2410c" };
+    case "Blue":
+      return { label: "Blue", bg: "#dbeafe", text: "#1d4ed8" };
+    case "Red":
+      return { label: "Red", bg: "#fee2e2", text: "#b91c1c" };
+    case "Purple":
+      return { label: "Purple", bg: "#f3e8ff", text: "#7e22ce" };
+    case "Green":
+      return { label: "Green", bg: "#dcfce7", text: "#15803d" };
+    case "Black":
+      return { label: "Black", bg: "#111827", text: "#ffffff" };
+    default:
+      return null;
+  }
 }
 
 // STORAGE
