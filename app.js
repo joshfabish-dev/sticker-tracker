@@ -185,12 +185,119 @@ function setFilter(mode) {
   render();
 }
 
+function renderProgressDashboard() {
+
+  const container = document.getElementById("allList");
+
+  const total = stickers.length;
+  const collected = stickers.filter(s => s.Have).length;
+
+  const percent = total
+    ? Math.round((collected / total) * 100)
+    : 0;
+
+  const teams = {};
+
+  stickers.forEach(s => {
+
+    if (!teams[s.Organization]) {
+      teams[s.Organization] = {
+        total: 0,
+        collected: 0
+      };
+    }
+
+    teams[s.Organization].total++;
+
+    if (s.Have) {
+      teams[s.Organization].collected++;
+    }
+
+  });
+
+  const sortedTeams = Object.entries(teams)
+    .map(([team, stats]) => ({
+      team,
+      percent: Math.round(
+        (stats.collected / stats.total) * 100
+      ),
+      collected: stats.collected,
+      total: stats.total
+    }))
+    .sort((a, b) => b.percent - a.percent);
+
+  container.innerHTML = `
+    <div class="card">
+
+      <h2>🏆 Collection Progress</h2>
+
+      <div style="
+        font-size:32px;
+        font-weight:700;
+        margin-top:12px;
+      ">
+        ${collected}/${total}
+      </div>
+
+      <div style="
+        margin-top:4px;
+        font-size:18px;
+      ">
+        ${percent}% Complete
+      </div>
+
+      <div class="progress-track" style="margin-top:12px;">
+        <div class="progress-fill"
+             style="
+               width:${percent}%;
+               background:${getProgressColor(percent)};
+             ">
+        </div>
+      </div>
+
+    </div>
+
+    ${sortedTeams.map(t => `
+      <div class="card">
+
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          margin-bottom:8px;
+        ">
+          <strong>${t.team}</strong>
+          <strong>${t.percent}%</strong>
+        </div>
+
+        <div style="margin-bottom:8px;">
+          ${t.collected}/${t.total}
+        </div>
+
+        <div class="progress-track">
+          <div class="progress-fill"
+               style="
+                 width:${t.percent}%;
+                 background:${getProgressColor(t.percent)};
+               ">
+          </div>
+        </div>
+
+      </div>
+    `).join("")}
+  `;
+}
+
 // MAIN RENDER
 function render() {
   renderProgress();
 
   const container = document.getElementById("allList");
   if (!container) return;
+
+  if (filterMode === "progress") {
+    renderProgressDashboard();
+    return;
+  }
 
   const filtered = stickers
     .map((s, i) => ({ ...s, i }))
