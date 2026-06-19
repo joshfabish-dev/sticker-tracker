@@ -196,6 +196,11 @@ function renderProgressDashboard() {
     ? Math.round((collected / total) * 100)
     : 0;
 
+  const rareCount = stickers.filter(s =>
+    s.Variant &&
+    s.Variant !== "White"
+  ).length;
+
   const teams = {};
 
   stickers.forEach(s => {
@@ -226,13 +231,25 @@ function renderProgressDashboard() {
     }))
     .sort((a, b) => b.percent - a.percent);
 
+  const completedTeams =
+    sortedTeams.filter(t => t.percent === 100).length;
+
+  const topTeams = sortedTeams.slice(0, 3);
+
+  const bottomTeams = sortedTeams
+    .slice()
+    .reverse()
+    .slice(0, 3);
+
   container.innerHTML = `
+
+    <!-- OVERALL -->
     <div class="card">
 
       <h2>🏆 Collection Progress</h2>
 
       <div style="
-        font-size:32px;
+        font-size:34px;
         font-weight:700;
         margin-top:12px;
       ">
@@ -257,6 +274,68 @@ function renderProgressDashboard() {
 
     </div>
 
+    <!-- ACHIEVEMENTS -->
+    <div class="card">
+
+      <h3>🏅 Achievements</h3>
+
+      <div style="margin-top:8px;">
+        🏆 Completed Teams: <strong>${completedTeams}</strong>
+      </div>
+
+      <div style="margin-top:8px;">
+        ⭐ Rare Cards: <strong>${rareCount}</strong>
+      </div>
+
+    </div>
+
+    <!-- TOP 3 -->
+    <div class="card">
+
+      <h3>🥇 Top Teams</h3>
+
+      ${topTeams.map((t, idx) => `
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          margin:10px 0;
+        ">
+          <div>
+            ${idx + 1}. ${t.team}
+          </div>
+
+          <strong>${t.percent}%</strong>
+        </div>
+      `).join("")}
+
+    </div>
+
+    <!-- NEEDS ATTENTION -->
+    <div class="card">
+
+      <h3>🎯 Needs Attention</h3>
+
+      ${bottomTeams.map(t => `
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          margin:10px 0;
+        ">
+          <div>${t.team}</div>
+
+          <strong>${t.percent}%</strong>
+        </div>
+      `).join("")}
+
+    </div>
+
+    <!-- ALL TEAMS -->
+    <div class="card">
+
+      <h3>📊 Team Rankings</h3>
+
+    </div>
+
     ${sortedTeams.map(t => `
       <div class="card">
 
@@ -266,7 +345,10 @@ function renderProgressDashboard() {
           margin-bottom:8px;
         ">
           <strong>${t.team}</strong>
-          <strong>${t.percent}%</strong>
+
+          <strong>
+            ${t.percent}%
+          </strong>
         </div>
 
         <div style="margin-bottom:8px;">
@@ -284,9 +366,9 @@ function renderProgressDashboard() {
 
       </div>
     `).join("")}
+
   `;
 }
-
 // MAIN RENDER
 function render() {
   renderProgress();
