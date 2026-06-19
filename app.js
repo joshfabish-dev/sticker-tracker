@@ -217,15 +217,13 @@ function totalDuplicates(sticker) {
   if (!sticker.DuplicateVariants) return sticker.DuplicatesQty || 0;
 
   return Object.values(sticker.DuplicateVariants).reduce((sum, qty) => {
-    return sum + (parseInt(qty) || 0);
+    return sum + (Number(qty) || 0);
   }, 0);
 }
 
+// ✅ TRADE SUMMARY FOR FRONT CARD
 function getTradeSummary(sticker) {
-
-  if (!sticker.DuplicateVariants) {
-    return "";
-  }
+  if (!sticker.DuplicateVariants) return "";
 
   const colors = [
     { key: "White", icon: "⚪" },
@@ -243,9 +241,8 @@ function getTradeSummary(sticker) {
     .join(" ");
 }
 
-
-// ✅ SYNC LEGACY FIELD
-function syncDuplicateQty(sticker) {
+// ✅ KEEP LEGACY FIELD IN SYNC
+function syncDuplicatesQty(sticker) {
   sticker.DuplicatesQty = totalDuplicates(sticker);
 }
 
@@ -472,7 +469,6 @@ function render() {
         filterMatch = !s.Have;
       }
 
-      // ✅ Trades now uses duplicate variants
       if (filterMode === "dupes") {
         filterMatch = totalDuplicates(s) > 0;
       }
@@ -625,7 +621,6 @@ function openModal(i) {
   status.style.borderRadius = "999px";
   status.style.fontWeight = "600";
 
-  // ✅ Render duplicate variants inventory
   renderDuplicateInventory(s);
 
   document.getElementById("modal").classList.add("active");
@@ -639,7 +634,7 @@ function renderDuplicateInventory(sticker) {
   const colors = ["White", "Orange", "Blue", "Red", "Purple", "Green", "Black"];
 
   container.innerHTML = colors.map(color => {
-    const count = sticker.DuplicateVariants?.[color] || 0;
+    const count = Number(sticker.DuplicateVariants?.[color] || 0);
     const dotColor = color === "White" ? "#ddd" : getVariantBorderColor(color);
     const textColor = color === "Black" ? "#111827" : "#333";
 
@@ -673,9 +668,9 @@ function renderDuplicateInventory(sticker) {
           align-items:center;
           gap:8px;
         ">
-          <button onclick="updateDuplicateVariant('${color}', -1)">-</button>
+          <button type="button" onclick="event.stopPropagation(); updateDuplicateVariant('${color}', -1)">-</button>
           <span style="min-width:24px; text-align:center; font-weight:600;">${count}</span>
-          <button onclick="updateDuplicateVariant('${color}', 1)">+</button>
+          <button type="button" onclick="event.stopPropagation(); updateDuplicateVariant('${color}', 1)">+</button>
         </div>
       </div>
     `;
@@ -684,13 +679,19 @@ function renderDuplicateInventory(sticker) {
 
 // CLOSE MODAL
 function closeModal(e) {
-  if (e && e.target.id !== "modal") return;
-  document.getElementById("modal").classList.remove("active");
+  if (e && e.target && e.target.id && e.target.id !== "modal") return;
+  const modal = document.getElementById("modal");
+  if (modal) {
+    modal.classList.remove("active");
+  }
 }
 
 // ACTIONS
 function toggleModal() {
-  stickers[activeIndex].Have = !stickers[activeIndex].Have;
+  const sticker = stickers[activeIndex];
+  if (!sticker) return;
+
+  sticker.Have = !sticker.Have;
   save();
   render();
   openModal(activeIndex);
@@ -712,7 +713,8 @@ function updateDuplicateVariant(color, delta) {
     };
   }
 
-  sticker.DuplicateVariants[color] += delta;
+  const current = Number(sticker.DuplicateVariants[color] || 0);
+  sticker.DuplicateVariants[color] = current + delta;
 
   if (sticker.DuplicateVariants[color] < 0) {
     sticker.DuplicateVariants[color] = 0;
@@ -750,7 +752,10 @@ function resetDupes() {
 }
 
 function updateVariant(value) {
-  stickers[activeIndex].Variant = value;
+  const sticker = stickers[activeIndex];
+  if (!sticker) return;
+
+  sticker.Variant = value;
   save();
   render();
   openModal(activeIndex);
