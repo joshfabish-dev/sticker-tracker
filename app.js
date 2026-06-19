@@ -264,6 +264,16 @@ function renderProgressDashboard() {
     Black: 0
   };
 
+  const tradeInventory = {
+    White: 0,
+    Orange: 0,
+    Blue: 0,
+    Red: 0,
+    Purple: 0,
+    Green: 0,
+    Black: 0
+  };
+
   stickers.forEach(s => {
     if (!teams[s.Organization]) {
       teams[s.Organization] = {
@@ -278,6 +288,14 @@ function renderProgressDashboard() {
       teams[s.Organization].collected++;
     }
 
+    // ✅ Trade inventory totals
+    if (s.DuplicateVariants) {
+      Object.keys(tradeInventory).forEach(color => {
+        tradeInventory[color] += Number(s.DuplicateVariants[color] || 0);
+      });
+    }
+
+    // ✅ Rare breakdown (collected only)
     if (
       s.Have &&
       s.Variant &&
@@ -372,6 +390,41 @@ function renderProgressDashboard() {
               border-radius:999px;
               background:${getVariantBorderColor(color)};
               border:${color === "Black" ? "1px solid #444" : "none"};
+            "></span>
+            <span>${color}</span>
+          </div>
+
+          <strong>${count}</strong>
+        </div>
+      `).join("")}
+    </div>
+
+    <div class="card">
+      <h3>🤝 Trade Inventory</h3>
+
+      ${Object.entries(tradeInventory).map(([color, count]) => `
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          margin:10px 0;
+        ">
+          <div style="
+            display:flex;
+            align-items:center;
+            gap:8px;
+          ">
+            <span style="
+              display:inline-block;
+              width:14px;
+              height:14px;
+              border-radius:999px;
+              background:${color === "White" ? "#ddd" : getVariantBorderColor(color)};
+              border:${color === "White"
+                ? "1px solid #bbb"
+                : color === "Black"
+                ? "1px solid #444"
+                : "none"};
             "></span>
             <span>${color}</span>
           </div>
