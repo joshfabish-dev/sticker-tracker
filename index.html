@@ -58,6 +58,10 @@
       -webkit-overflow-scrolling: touch;
     }
 
+    .toolbar::-webkit-scrollbar {
+      display: none;
+    }
+
     .search-input {
       width: 100%;
       padding: 12px;
@@ -175,10 +179,11 @@
     }
 
     .file-label {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
+      color: white;
+    }
+
+    .file-label:not(.secondary) {
+      background: #1f6fe5;
     }
 
   </style>
@@ -202,7 +207,10 @@
       </label>
 
       <!-- ✅ PAGE IMPORT (THIS IS YOUR BUTTON) -->
-      <label id="pageCsvImportLabel" class="secondary">
+      <label
+        id="pageCsvImportLabel"
+        class="file-label secondary">
+      
         Import Pages
         <input type="file" id="pageCsvInput" accept=".csv" style="display:none;">
       </label>
@@ -237,7 +245,7 @@
       <button onclick="setFilter('needed')">Needed</button>
       <button onclick="setFilter('dupes')">Trades</button>
       <button onclick="setFilter('rare')">Rares</button>
-      <button onclick="setFilter('progress')"> Stats </button>
+      <button onclick="setFilter('progress')"> 📊 Stats </button>
     </div>
 
     <input id="searchInput" class="search-input" placeholder="Search by code or name">
