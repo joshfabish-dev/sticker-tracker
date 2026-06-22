@@ -80,44 +80,87 @@ document.addEventListener("DOMContentLoaded", () => {
     .getElementById("restoreInput")
     ?.addEventListener("change", restoreBackup);
 
-  // ✅ SAFELY FIX EXISTING DATA
+  // Fix existing data
   if (stickers.length > 0) {
     fixSwissCodes();
     normalizeStickerData();
     migrateDuplicateVariants();
   }
 
-  // ✅ Hide CSV button if sticker data already exists
+  // Hide CSV button if sticker data already exists
   if (stickers.length > 0) {
-    const csvBtn = document.getElementById("csvImportLabel");
-    if (csvBtn) csvBtn.style.display = "none";
-  }
+    const csvBtn =
+      document.getElementById("csvImportLabel");
 
-  // ✅ Hide page import ONLY if page data already exists
-  const pageBtn = document.getElementById("pageCsvImportLabel");
-  if (pageBtn) {
-    const hasPages = stickers.some(s => s.Page);
-    if (hasPages) {
-      pageBtn.style.display = "none";
+    if (csvBtn) {
+      csvBtn.style.display = "none";
     }
   }
 
-  // CSV IMPORT (main stickers)
-  document.getElementById("csvInput")?.addEventListener("change", handleCSV);
+  // Hide page import if pages already exist
+  const pageBtn =
+    document.getElementById("pageCsvImportLabel");
 
-  // PAGE IMPORT (Code → Page)
-  document.getElementById("pageCsvInput")?.addEventListener("change", handlePageCSV);
+  if (pageBtn) {
 
-  // Search
-  const searchInput = document.getElementById("searchInput");
-  if (searchInput) {
-    searchInput.oninput = (e) => {
-      searchText = e.target.value.toLowerCase();
-      render();
-    };
+    const hasPages =
+      stickers.some(s => s.Page);
+
+    if (hasPages) {
+      pageBtn.style.display = "none";
+    }
+
   }
 
+  // CSV Import
+  document
+    .getElementById("csvInput")
+    ?.addEventListener("change", handleCSV);
+
+  // Page Import
+  document
+    .getElementById("pageCsvInput")
+    ?.addEventListener("change", handlePageCSV);
+
+  // Search
+  const searchInput =
+    document.getElementById("searchInput");
+
+  if (searchInput) {
+
+    searchInput.oninput = (e) => {
+
+      searchText =
+        e.target.value.toLowerCase();
+
+      render();
+
+    };
+
+  }
+
+  // Splash Screen
+  setTimeout(() => {
+
+    const splash =
+      document.getElementById(
+        "splashScreen"
+      );
+
+    if (!splash) return;
+
+    splash.style.opacity = "0";
+
+    setTimeout(() => {
+
+      splash.remove();
+
+    }, 500);
+
+  }, 1500);
+
   render();
+
 });
 
 // MAIN CSV IMPORT
@@ -922,7 +965,7 @@ function renderProgress() {
 
   if (progressText) {
     progressText.innerText =
-      `${collected}/${total} collected (${percent}%) • ${remaining} left`;
+      `🏆 ${collected}/${total} collected (${percent}%) • ${remaining} left`
   }
 
   const bar =
@@ -938,10 +981,15 @@ function renderProgress() {
 
 // COLOR LOGIC
 function getProgressColor(percent) {
-  if (percent >= 100) return "#16a34a";
-  if (percent >= 75) return "#2563eb";
-  if (percent >= 50) return "#f59e0b";
-  return "#ef4444";
+
+  if (percent >= 100) return "#F4C430"; // Gold
+
+  if (percent >= 75) return "#16a34a";  // Green
+
+  if (percent >= 50) return "#0057B8";  // World Cup Blue
+
+  return "#E63946";                     // World Cup Red
+
 }
 
 function getVariantBorderColor(variant) {
