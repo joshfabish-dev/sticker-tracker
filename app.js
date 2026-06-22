@@ -72,7 +72,13 @@ function applyPageNumbers(mapping) {
 
 // INIT
 document.addEventListener("DOMContentLoaded", () => {
+
   restore();
+
+  // Restore backup file handler
+  document
+    .getElementById("restoreInput")
+    ?.addEventListener("change", restoreBackup);
 
   // ✅ SAFELY FIX EXISTING DATA
   if (stickers.length > 0) {
@@ -898,17 +904,36 @@ function updateVariant(value) {
 
 // PROGRESS
 function renderProgress() {
+
   const total = stickers.length;
-  const collected = stickers.filter(s => s.Have).length;
-  const percent = total ? Math.round((collected / total) * 100) : 0;
+
+  const collected = stickers.filter(
+    s => s.Have
+  ).length;
+
+  const percent = total
+    ? Math.round((collected / total) * 100)
+    : 0;
+
   const remaining = total - collected;
 
-  document.getElementById("progressText").innerText =
-    `${collected}/${total} collected (${percent}%) • ${remaining} left`;
+  const progressText =
+    document.getElementById("progressText");
 
-  const bar = document.getElementById("progressBar");
-  bar.style.width = percent + "%";
-  bar.style.background = getProgressColor(percent);
+  if (progressText) {
+    progressText.innerText =
+      `${collected}/${total} collected (${percent}%) • ${remaining} left`;
+  }
+
+  const bar =
+    document.getElementById("progressBar");
+
+  if (bar) {
+    bar.style.width = percent + "%";
+    bar.style.background =
+      getProgressColor(percent);
+  }
+
 }
 
 // COLOR LOGIC
@@ -959,15 +984,23 @@ function getVariantBadge(variant) {
 
 function downloadBackup() {
 
+  const backup = {
+    version: 1,
+    exported: new Date().toISOString(),
+    stickers: stickers
+  };
+
   const data = JSON.stringify(
-    stickers,
+    backup,
     null,
     2
   );
 
   const blob = new Blob(
     [data],
-    { type: "application/json" }
+    {
+      type: "application/json"
+    }
   );
 
   const url = URL.createObjectURL(blob);
@@ -992,6 +1025,101 @@ function downloadBackup() {
 
   URL.revokeObjectURL(url);
 }
+
+function restoreBackup(e) {
+
+  const file = e.target.files[0];
+
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function(event) {
+
+    try {
+
+      const importedData = JSON.parse(
+        event.target.result
+      );
+
+      let importedStickers;
+
+      // Support BOTH old and new backup formats
+      if (Array.isArray(importedData)) {
+
+        // Legacy backups
+        importedStickers = importedData;
+
+      }
+      else if (
+        importedData &&
+        Array.isArray(importedData.stickers)
+      ) {
+
+        // Versioned backups
+        importedStickers = importedData.stickers;
+
+      }
+      else {
+
+        throw new Error("Invalid backup file");
+
+      }
+
+      const confirmRestore = confirm(
+        "Restore backup and replace current collection?"
+      );
+
+      if (!confirmRestore) {
+        e.target.value = "";
+        return;
+      }
+
+      // Only replace data AFTER confirmation
+      stickers = importedStickers;
+
+
+      // Clear any previously opened card reference
+      activeIndex = null;
+
+
+      // Apply migrations and cleanup
+      fixSwissCodes();
+      normalizeStickerData();
+      migrateDuplicateVariants();
+
+      save();
+      render();
+
+      // Nice UX after restore
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+
+      alert(
+        `Backup restored successfully.\n\n${stickers.length} stickers loaded.`
+      );
+
+    } catch (err) {
+
+      console.error(err);
+
+      alert(
+        "Unable to restore backup file. Please select a valid Sticker Tracker backup."
+      );
+
+    }
+
+    // Allow selecting same file again later
+    e.target.value = "";
+
+  };
+
+  reader.readAsText(file);
+
+}
+
 
 
 // STORAGE
