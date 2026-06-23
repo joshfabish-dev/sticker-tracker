@@ -140,24 +140,41 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Splash Screen
-  setTimeout(() => {
 
-    const splash =
+    const splashBar =
       document.getElementById(
-        "splashScreen"
+        "splashProgressBar"
       );
 
-    if (!splash) return;
+    if (splashBar) {
 
-    splash.style.opacity = "0";
+      requestAnimationFrame(() => {
+
+        splashBar.style.width =
+          "100%";
+
+      });
+
+    }
 
     setTimeout(() => {
 
-      splash.remove();
+      const splash =
+        document.getElementById(
+          "splashScreen"
+        );
 
-    }, 500);
+      if (!splash) return;
 
-  }, 1500);
+      splash.style.opacity = "0";
+
+      setTimeout(() => {
+
+        splash.remove();
+
+      }, 500);
+
+    }, 2500);
 
   render();
 

@@ -288,6 +288,41 @@
       font-size: 18px;
     }
 
+    .splash-spacer {
+      height: 120px;
+    }
+
+    .loading-text {
+
+      margin-bottom: 12px;
+
+      font-size: 14px;
+      font-weight: 600;
+
+      letter-spacing: 1px;
+
+      color: #F4C430;
+
+      text-transform: uppercase;
+    }
+
+
+    .splash-progress {
+
+      width: 220px;
+      height: 8px;
+
+      background:
+        rgba(255,255,255,.25);
+
+      border-radius: 999px;
+
+      overflow: hidden;
+
+      margin-left: auto;
+      margin-right: auto;
+    }
+
     @keyframes bounce {
 
       0%,100% {
@@ -312,6 +347,40 @@
 
     }
 
+    .splash-progress {
+
+      margin-top: 24px;
+
+      width: 220px;
+      height: 8px;
+
+      background:
+        rgba(255,255,255,.25);
+
+      border-radius: 999px;
+
+      overflow: hidden;
+
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    #splashProgressBar {
+
+      width: 0%;
+      height: 100%;
+
+      background: #F4C430;
+
+      border-radius: 999px;
+
+      box-shadow:
+        0 0 10px rgba(244,196,48,.75);
+
+      transition: width 2.5s linear;
+    }
+
+
   </style>
 </head>
 
@@ -330,7 +399,17 @@
     </div>
 
     <div class="splash-subtitle">
-      Collect • Trade • Complete 
+      Collect • Trade • Complete
+    </div>
+
+    <div class="splash-spacer"></div>
+
+    <div class="loading-text">
+      Loading Collection...
+    </div>
+
+    <div class="splash-progress">
+      <div id="splashProgressBar"></div>
     </div>
 
     <div
