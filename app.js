@@ -174,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       }, 500);
 
-    }, 2500);
+    }, 3000);
 
   render();
 
