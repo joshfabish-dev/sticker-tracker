@@ -99,15 +99,79 @@
         0 8px 20px rgba(0,0,0,.10);
     }
 
-    .search-input {
-      width: min(400px, 90%);
-      display: block;
-      margin: 12px auto 0 auto;
+    .search-container {
 
-      padding: 12px;
+      position: relative;
+
+      width: min(400px, 90%);
+
+      margin: 12px auto 0 auto;
+    }
+
+    .search-input {
+
+      width: 100%;
+
+      padding: 12px 42px 12px 12px;
+
       border-radius: 10px;
       border: 1px solid #ccc;
+
       font-size: 16px;
+
+      box-sizing: border-box;
+    }
+
+    .search-clear {
+
+      position: absolute;
+
+      right: 8px;
+      top: 50%;
+
+      transform: translateY(-50%);
+
+      width: 28px;
+      height: 28px;
+
+      border-radius: 999px;
+
+      
+      background: #d1d5db;
+
+      color: #374151;
+
+      padding: 0;
+
+      display: none;
+
+      align-items: center;
+      justify-content: center;
+
+      border: none;
+
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .search-clear:active {
+
+      transform:
+        translateY(-50%)
+        scale(.92);
+
+    }
+
+    .search-input:focus {
+
+      outline: none;
+
+      border-color: #0057B8;
+
+      box-shadow:
+        0 0 0 3px rgba(0,87,184,.15);
+
     }
 
     .progress-track {
@@ -508,9 +572,27 @@
       <button onclick="setFilter('progress')"> 📊 Stats </button>
     </div>
 
-    <input id="searchInput" class="search-input" placeholder="Search by code or name">
+    <div class="search-container">
+
+      <input
+        id="searchInput"
+        class="search-input"
+        placeholder="🔍 Search by code or name"
+
+      <button
+        type="button"
+        id="clearSearch"
+        class="search-clear"
+        onclick="clearSearch()">
+
+        ✕
+
+      </button>
+
+    </div>
 
     <div id="progressSection">
+
 
       <div
         id="progressText"

@@ -55,6 +55,33 @@ function migrateDuplicateVariants() {
   if (updated) save();
 }
 
+function clearSearch() {
+
+  searchText = "";
+
+  const input =
+    document.getElementById(
+      "searchInput"
+    );
+
+  const clearBtn =
+    document.getElementById(
+      "clearSearch"
+    );
+
+  if (input) {
+    input.value = "";
+    input.focus();
+  }
+
+  if (clearBtn) {
+    clearBtn.style.display = "none";
+  }
+
+  render();
+
+}
+
 // ✅ APPLY PAGE NUMBERS (SAFE ENRICHMENT)
 function applyPageNumbers(mapping) {
   let updated = false;
@@ -132,6 +159,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
       searchText =
         e.target.value.toLowerCase();
+
+      const clearBtn =
+        document.getElementById(
+          "clearSearch"
+        );
+
+      if (clearBtn) {
+
+        clearBtn.style.display =
+          searchText
+            ? "flex"
+            : "none";
+
+      }
 
       render();
 
