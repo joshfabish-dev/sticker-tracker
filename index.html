@@ -134,6 +134,8 @@
       width: 28px;
       height: 28px;
 
+      z-index: 2;
+
       border-radius: 999px;
 
       
@@ -577,24 +579,21 @@
       <input
         id="searchInput"
         class="search-input"
-        placeholder="🔍 Search by code or name"
+        placeholder="🔍 Search by code or name">
 
       <button
         type="button"
         id="clearSearch"
         class="search-clear"
         onclick="clearSearch()">
-
         ✕
-
       </button>
 
     </div>
 
-    <div id="progressSection">
+    <div id="progressSection">    
 
-
-      <div
+        <div
         id="progressText"
         style="
           margin-top:12px;
